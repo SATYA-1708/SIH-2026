@@ -1,0 +1,21 @@
+{
+  "appId": "in.ewastesetu.collector",
+  "appName": "E-Waste Setu Collector",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  },
+  "plugins": {
+    "Camera": {
+      "presentationStyle": "fullscreen"
+    },
+    "Geolocation": {
+      "accuracy": "high"
+    },
+    "Network": {
+      "statusChangeMonitoring": true
+    }
+  }
+}

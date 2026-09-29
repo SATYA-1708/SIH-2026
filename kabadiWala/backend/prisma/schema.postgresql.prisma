@@ -1,0 +1,310 @@
+// ============================================================================
+// E-Waste Setu: Production PostgreSQL + PostGIS Schema
+// Designed for High-Volume Formal E-Waste Traceability & Circular Economy (CPCB)
+// ============================================================================
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  COLLECTOR
+  RECYCLER
+  AUTHORITY
+  ADMIN
+}
+
+enum PaymentMethod {
+  CASH
+  UPI
+  BANK_TRANSFER
+}
+
+enum PaymentStatus {
+  PENDING
+  CONFIRMED
+  FAILED
+}
+
+enum TransactionStatus {
+  INITIATED
+  ACCEPTED
+  HANDED_OVER
+  VERIFIED
+  COMPLETED
+  REJECTED
+}
+
+// ----------------------------------------------------------------------------
+// 1. MINIMAL COLLECTOR PROFILE (Privacy by Design - No Burdensome KYC)
+// ----------------------------------------------------------------------------
+model Collector {
+  id                       String        @id @default(uuid())
+  displayName              String
+  phoneNumber              String?
+  preferredLanguage        String        @default("hi") // hi, mr, en
+  generalOperatingLocation String
+  createdAt                DateTime      @default(now())
+  updatedAt                DateTime      @updatedAt
+
+  lots                     Lot[]
+  transactions             Transaction[]
+  paymentsReceived         Payment[]
+  auditLogs                AuditLog[]
+
+  @@index([generalOperatingLocation])
+}
+
+// ----------------------------------------------------------------------------
+// 2. AUTHORIZED RECYCLER / PROCESSING FACILITY (PostGIS Geo-Indexed)
+// ----------------------------------------------------------------------------
+model Recycler {
+  id                  String        @id @default(uuid())
+  name                String
+  facilityLocation    String
+  latitude            Float
+  longitude           Float
+  // In PostgreSQL with PostGIS, latitude/longitude maps to: 
+  // location Unsupported("geography(Point, 4326)")
+  materialsAccepted   String[]      // Native PostgreSQL text array
+  authorizationNumber String        @unique // CPCB / MPCB registered license
+  authorizationStatus String        // "Authorized" | "Certified" | "Suspended"
+  contactPhone        String
+  contactEmail        String?
+  offeredRates        Json          // Mapping category/grade -> rate per kg
+  pickupAvailable     Boolean       @default(true)
+  serviceAreaRadiusKm Float         @default(50.0)
+  reliabilityScore    Float         @default(95.0) // Scale accuracy & prompt payout rating (0-100)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  transactions        Transaction[]
+  priceFeeds          Price[]
+  paymentsDisbursed   Payment[]
+
+  @@index([authorizationNumber])
+  @@index([authorizationStatus])
+}
+
+// ----------------------------------------------------------------------------
+// 3. MATERIAL & SCIENTIFIC CATALOG (E-Waste Rules 2022)
+// ----------------------------------------------------------------------------
+model MaterialCatalog {
+  id                String   @id @default(uuid())
+  category          String   // PCB, Cable, Battery, CRT, LCD Panel, Motor, Magnet-bearing Assembly, Mixed Plastic, Other
+  subCategory       String?  // e.g. "Server Gold Motherboard", "Industrial Armored Cable"
+  grade             String   @default("Standard") // Grade A (Telecom/Server), Grade B (Desktop), Grade C (Brown TV)
+  description       String
+  imageReference    String?  // S3 / GCS Object key: e.g. "catalog/pcb-server-grade.jpg"
+  basePricePerKg    Float
+  marketRangeMin    Float
+  marketRangeMax    Float
+  hazardLevel       String   @default("Medium") // Low, Medium, High, Extreme
+  handlingTipEn     String
+  handlingTipHi     String
+  handlingTipMr     String
+  createdAt         DateTime @default(now())
+
+  prices            Price[]
+
+  @@unique([category, subCategory, grade])
+}
+
+// ----------------------------------------------------------------------------
+// 4. REGIONAL REAL-TIME & HISTORICAL PRICE ENGINE
+// ----------------------------------------------------------------------------
+model Price {
+  id               String           @id @default(uuid())
+  materialCategory String
+  subCategory      String?
+  grade            String           @default("Standard")
+  location         String           // City / APMC Hub (Nagpur, Pune, Mumbai, Nashik)
+  date             DateTime         @default(now())
+  buyingPrice      Float            // Purchase price paid to collector per kg
+  sellingPrice     Float?           // Smelter/refinery realization per kg
+  unit             String           @default("kg")
+  confidence       Float            @default(0.95) // Feed quality score (0.0 to 1.0)
+  source           String           @default("Market Board") // "Recycler Quote", "APMC Hub", "Verified Handover"
+  
+  recyclerId       String?
+  recycler         Recycler?        @relation(fields: [recyclerId], references: [id])
+  materialCatalogId String?
+  materialCatalog  MaterialCatalog? @relation(fields: [materialCatalogId], references: [id])
+  
+  createdAt        DateTime         @default(now())
+
+  @@index([materialCategory, location, date])
+}
+
+// ----------------------------------------------------------------------------
+// 5. SCRAP LOT (Created in Field / Idempotent Sync)
+// ----------------------------------------------------------------------------
+model Lot {
+  id                  String              @id @default(uuid())
+  lotReference        String              @unique // EWL-YYYYMMDD-XXXX
+  operationId         String?             @unique // OP-UUID for idempotent offline creation
+  collectorId         String
+  collector           Collector           @relation(fields: [collectorId], references: [id])
+  
+  materialCategory    String
+  subCategory         String?
+  materialDescription String?
+  photoObjectKey      String?             // Object Storage key (S3 / GCS)
+  approximateWeight   Float
+  condition           String              @default("Good") // Good, Used, Damaged, Mixed
+  estimatedValue      Float
+  estimatedRangeMin   Float
+  estimatedRangeMax   Float
+  collectionLocation  String
+  latitude            Float?
+  longitude           Float?
+  status              String              @default("PENDING_MATCH") // PENDING_MATCH, OFFER_RECEIVED, ACCEPTED, HANDED_OVER, COMPLETED
+  
+  selectedRecyclerId  String?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  transactions        Transaction[]
+  traceabilityRecords TraceabilityRecord[]
+
+  @@index([collectorId])
+  @@index([status])
+  @@index([lotReference])
+}
+
+// ----------------------------------------------------------------------------
+// 6. COMMERCIAL TRANSACTION & NEGOTIATION
+// ----------------------------------------------------------------------------
+model Transaction {
+  id                   String        @id @default(uuid())
+  transactionReference String        @unique // TXN-YYYYMMDD-XXXX
+  lotId                String
+  lot                  Lot           @relation(fields: [lotId], references: [id])
+  collectorId          String
+  collector            Collector     @relation(fields: [collectorId], references: [id])
+  recyclerId           String
+  recycler             Recycler      @relation(fields: [recyclerId], references: [id])
+  
+  quotedPricePerKg     Float
+  finalSaleValue       Float
+  handoverLocation     String
+  handoverLatitude     Float?
+  handoverLongitude    Float?
+  dateTime             DateTime      @default(now())
+  
+  transactionStatus    TransactionStatus @default(INITIATED)
+  paymentStatus        PaymentStatus     @default(PENDING)
+  
+  // AI Anomaly Guardrail
+  anomalyFlag          Boolean       @default(false)
+  anomalyReason        String?
+
+  payments             Payment[]
+  auditLogs            AuditLog[]
+
+  @@index([lotId])
+  @@index([collectorId])
+  @@index([recyclerId])
+  @@index([transactionReference])
+}
+
+// ----------------------------------------------------------------------------
+// 7. TAMPER-EVIDENT HASH-CHAINED TRACEABILITY RECORD
+// ----------------------------------------------------------------------------
+model TraceabilityRecord {
+  id                   String   @id @default(uuid())
+  lotId                String
+  lot                  Lot      @relation(fields: [lotId], references: [id])
+  
+  // Weighbridge & Physical Intake
+  verifiedWeightKg     Float
+  intakePhotoObjectKey String?  // Object Storage key for intake photo
+  gpsCoordinates       String   // e.g. "21.1215, 79.0352"
+  handoverReference    String   // Matches transactionReference
+  
+  // Cryptographic Audit Hash Chain (Merkle / Immutable Ledger)
+  previousRecordHash   String   // SHA-256 hash of preceding record in system
+  currentRecordHash    String   @unique // SHA-256(previousRecordHash + canonicalJson(payload))
+  canonicalPayload     String   // Raw deterministic JSON string that was hashed
+  digitalSignature     String   // HMAC / Ed25519 signature of authority/recycler node
+  
+  recyclerConfirmation Boolean  @default(true)
+  subsequentStatus     String   @default("In Sorting & De-manufacturing Facility")
+  timestamp            DateTime @default(now())
+
+  @@index([lotId])
+  @@index([currentRecordHash])
+}
+
+// ----------------------------------------------------------------------------
+// 8. DUAL PAYMENT WORKFLOW (CASH + UPI + BANK TRANSFER)
+// ----------------------------------------------------------------------------
+model Payment {
+  id                      String        @id @default(uuid())
+  transactionId           String
+  transaction             Transaction   @relation(fields: [transactionId], references: [id])
+  collectorId             String
+  collector               Collector     @relation(fields: [collectorId], references: [id])
+  recyclerId              String
+  recycler                Recycler      @relation(fields: [recyclerId], references: [id])
+  
+  amount                  Float
+  method                  PaymentMethod @default(CASH)
+  status                  PaymentStatus @default(PENDING)
+  
+  // Dual-Party Confirmation for Cash Transactions
+  cashRecyclerConfirmed   Boolean       @default(false)
+  cashCollectorConfirmed  Boolean       @default(false)
+  
+  // Digital UPI / Bank Verification Reference
+  digitalPaymentRef       String?       // UPI UTR number or Bank Reference ID
+  settlementTimestamp     DateTime?
+  createdAt               DateTime      @default(now())
+
+  @@index([transactionId])
+  @@index([collectorId])
+  @@index([status])
+}
+
+// ----------------------------------------------------------------------------
+// 9. IDEMPOTENT OFFLINE SYNCHRONIZATION LEDGER
+// ----------------------------------------------------------------------------
+model SyncOperation {
+  id            String   @id @default(uuid())
+  operationId   String   @unique // Generated by client: OP-YYYYMMDD-RANDOM
+  collectorId   String?
+  entityType    String   // "LOT_CREATE", "HANDOVER_CONFIRM", "STATUS_UPDATE"
+  clientPayload Json
+  status        String   @default("PROCESSED") // PROCESSED, DUPLICATE_SKIPPED, REJECTED
+  syncedAt      DateTime @default(now())
+
+  @@index([operationId])
+}
+
+// ----------------------------------------------------------------------------
+// 10. SYSTEM-WIDE SECURITY AUDIT LOG (Who did what, to which record, when)
+// ----------------------------------------------------------------------------
+model AuditLog {
+  id            String       @id @default(uuid())
+  actorId       String?
+  actorRole     Role         @default(COLLECTOR)
+  action        String       // "QUOTE_MODIFIED", "LOT_CREATED", "STATUS_CHANGED", "PAYMENT_CONFIRMED"
+  entityType    String       // "TRANSACTION", "LOT", "PAYMENT", "RECYCLER"
+  entityId      String
+  oldState      Json?
+  newState      Json?
+  ipAddress     String?
+  userAgent     String?
+  timestamp     DateTime     @default(now())
+
+  collector     Collector?   @relation(fields: [actorId], references: [id])
+  transaction   Transaction? @relation(fields: [entityId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([timestamp])
+}

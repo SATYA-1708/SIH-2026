@@ -1,0 +1,100 @@
+# Dependencies & Build Artifacts
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+build/
+**/build/
+.next/
+**/.next/
+out/
+**/out/
+
+# Environment Variables & Secrets
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# OS & Editor Files
+.DS_Store
+**/.DS_Store
+Thumbs.db
+**/Thumbs.db
+__MACOSX/
+**/.vscode/
+**/.idea/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Python Cache
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.tmp
+
+# Temporary & Dump Files
+*dump.txt
+test_*
+inspect_*
+update_slide3*.py
+info_slide*.html
+info_slide*.png
+slide_*_*.html
+graphic_slide_*.png
+sih_slide*.png
+Picture*.png
+railflow_*.png
+user_winning_guideline.txt
+
+# Scratch / Intermediate Decks & Reference Extractions
+arch_template_slides/
+extracted_ref_images/
+presentation_slides/
+sample_images/
+sample_railflow_slides/
+slide_pngs/
+user_ref_previews/
+winner_previews/
+SIH_2025/
+
+# Scratch Build & Export Scripts (Superseeded by build_official_sih_deck.py and export_and_convert.ps1)
+build_final_*.py
+build_native_*.py
+build_perfect_*.py
+build_presentation.py
+build_professional_*.py
+build_technical.py
+build_v3.py
+build_visual_*.py
+dump_reference_text.py
+export_arch.ps1
+export_masterpiece.ps1
+export_pdf.ps1
+export_presentation.ps1
+export_railflow.ps1
+export_tech.ps1
+export_user_refs.ps1
+export_v3.ps1
+export_winners.*
+extract_images.py
+generate_graphics.py
+generate_native_graphics.py
+generate_slide4_5_graphics.py
+generate_slide6_graphic.py
+generate_winning_graphics.py
+render_all_slides.py
+render_native_pngs.py
+
+# Previous Working Drafts (Official Master Deck is SIH2026_Idea_Presentation_E-Waste_Setu)
+SIH2026_Idea_Final_Masterpiece.*
+SIH2026_Idea_Native_Compliant.*
+SIH2026_Idea_Technical_Heavy.*
+SIH2026_PS26229_KabadiwalaConnect_HelloWorldWarriors.*
+SIH2026_E-Waste_Setu_HelloWorldWarriors.*

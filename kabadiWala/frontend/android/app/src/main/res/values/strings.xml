@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">E-Waste Setu Collector</string>
+    <string name="title_activity_main">E-Waste Setu Collector</string>
+    <string name="package_name">in.ewastesetu.collector</string>
+    <string name="custom_url_scheme">in.ewastesetu.collector</string>
+</resources>

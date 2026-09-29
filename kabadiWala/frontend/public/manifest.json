@@ -1,0 +1,16 @@
+{
+  "short_name": "EWasteSetu",
+  "name": "E-Waste Setu - Informal Collector to Formal Recycler",
+  "icons": [
+    {
+      "src": "/recycle-icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192 512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#047857",
+  "theme_color": "#047857",
+  "display": "standalone",
+  "orientation": "portrait"
+}

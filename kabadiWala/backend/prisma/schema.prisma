@@ -1,0 +1,149 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Collector {
+  id                       String        @id @default(uuid())
+  displayName              String
+  phoneNumber              String?
+  preferredLanguage        String        @default("hi") // hi, mr, en
+  generalOperatingLocation String
+  createdAt                DateTime      @default(now())
+  lots                     Lot[]
+  transactions             Transaction[]
+  earnings                 Earnings[]
+}
+
+model Recycler {
+  id                  String        @id @default(uuid())
+  name                String
+  facilityLocation    String
+  latitude            Float
+  longitude           Float
+  materialsAccepted   String        // JSON array of categories accepted
+  authorizationNumber String
+  authorizationStatus String        // "Authorized" | "Certified" | "Pending"
+  contact             String
+  offeredRates        String        // JSON mapping category -> price per kg
+  pickupAvailable     Boolean       @default(true)
+  serviceArea         String
+  createdAt           DateTime      @default(now())
+  transactions        Transaction[]
+  prices              Price[]
+}
+
+model MaterialCatalog {
+  id                String   @id @default(uuid())
+  category          String   // PCB, Cable, Battery, CRT, LCD Panel, Motor, Magnet-bearing Assembly, Mixed Plastic, Other
+  subCategory       String?
+  description       String
+  imageReference    String?
+  basePricePerKg    Float
+  marketRangeMin    Float
+  marketRangeMax    Float
+  hazardLevel       String   @default("Medium") // Low, Medium, High, Extreme
+  handlingTip       String
+  handlingTipHi     String
+  handlingTipMr     String
+  createdAt         DateTime @default(now())
+}
+
+model Price {
+  id               String    @id @default(uuid())
+  materialCategory String
+  subCategory      String?
+  location         String
+  date             DateTime  @default(now())
+  buyingPrice      Float
+  sellingPrice     Float?
+  unit             String    @default("kg")
+  recyclerId       String?
+  recycler         Recycler? @relation(fields: [recyclerId], references: [id])
+  source           String    @default("Market Board")
+  createdAt        DateTime  @default(now())
+}
+
+model Lot {
+  id                  String              @id @default(uuid())
+  lotReference        String              @unique
+  collectorId         String
+  collector           Collector           @relation(fields: [collectorId], references: [id])
+  materialCategory    String
+  materialDescription String?
+  imageReference      String?
+  approximateWeight   Float
+  condition           String              @default("Good") // Good, Used, Damaged, Mixed
+  estimatedValue      Float
+  estimatedRangeMin   Float
+  estimatedRangeMax   Float
+  collectionLocation  String
+  latitude            Float?
+  longitude           Float?
+  status              String              @default("PENDING_MATCH") // PENDING_MATCH, OFFER_RECEIVED, ACCEPTED, HANDED_OVER, COMPLETED, REJECTED
+  selectedRecyclerId  String?
+  createdAt           DateTime            @default(now())
+  transactions        Transaction[]
+  traceabilityRecords TraceabilityRecord[]
+}
+
+model Transaction {
+  id                   String        @id @default(uuid())
+  transactionReference String        @unique
+  lotId                String
+  lot                  Lot           @relation(fields: [lotId], references: [id])
+  collectorId          String
+  collector            Collector     @relation(fields: [collectorId], references: [id])
+  recyclerId           String
+  recycler             Recycler      @relation(fields: [recyclerId], references: [id])
+  quotedPrice          Float
+  finalSaleValue       Float
+  handoverLocation     String
+  handoverLatitude     Float?
+  handoverLongitude    Float?
+  dateTime             DateTime      @default(now())
+  paymentStatus        String        @default("PENDING") // PENDING, PAID
+  transactionStatus    String        @default("ACCEPTED") // ACCEPTED, HANDED_OVER, VERIFIED, COMPLETED, REJECTED
+  anomalyFlag          Boolean       @default(false)
+  anomalyReason        String?
+  earnings             Earnings[]
+}
+
+model TraceabilityRecord {
+  id                   String   @id @default(uuid())
+  lotId                String
+  lot                  Lot      @relation(fields: [lotId], references: [id])
+  photographs          String   // JSON string of images
+  weight               Float
+  timestamp            DateTime @default(now())
+  gpsCoordinates       String?
+  handoverReference    String
+  recyclerConfirmation Boolean  @default(false)
+  subsequentStatus     String   @default("In Processing")
+}
+
+model Earnings {
+  id            String      @id @default(uuid())
+  collectorId   String
+  collector     Collector   @relation(fields: [collectorId], references: [id])
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+  amount        Float
+  paymentMethod String      @default("UPI / Cash")
+  paymentStatus String      @default("PAID") // PAID, PENDING
+  date          DateTime    @default(now())
+}
+
+model SyncLog {
+  id          String   @id @default(uuid())
+  clientLotId String?
+  collectorId String?
+  action      String
+  status      String   @default("SUCCESS")
+  syncedAt    DateTime @default(now())
+  details     String?
+}
