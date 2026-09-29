@@ -7,6 +7,6 @@
     "dev:backend": "npm run dev --prefix backend",
     "dev:frontend": "npm run dev --prefix frontend",
     "db:setup": "cd backend && npx prisma db push && npm run db:seed",
-    "build": "npm run build --prefix backend && npm run build --prefix frontend"
+    "build": "node build-vercel.js"
   }
 }

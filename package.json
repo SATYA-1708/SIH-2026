@@ -3,6 +3,6 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "npm --prefix kabadiWala/frontend install && npm --prefix kabadiWala/frontend run build"
+    "build": "node build-vercel.js"
   }
 }
