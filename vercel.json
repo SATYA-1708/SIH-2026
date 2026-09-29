@@ -1,0 +1,10 @@
+{
+  "buildCommand": "npm --prefix kabadiWala/frontend install && npm --prefix kabadiWala/frontend run build",
+  "outputDirectory": "kabadiWala/frontend/dist",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
