@@ -10,7 +10,7 @@
 
 ## Quick Links
 
-- **Live Prototype Web Application:** [https://ewastesetu.vercel.app](https://ewastesetu.vercel.app)
+- **Live Prototype Web Application:** [https://recysaathi.vercel.app](https://recysaathi.vercel.app)
 - **Video Demonstration:** [https://youtu.be/ewastesetu-demo](https://youtu.be/ewastesetu-demo)
 - **Official Presentation (PPTX):** [SIH2026_Idea_Presentation_E-Waste_Setu.pptx](./SIH2026_Idea_Presentation_E-Waste_Setu.pptx)
 - **Official Presentation (PDF):** [SIH2026_Idea_Presentation_E-Waste_Setu.pdf](./SIH2026_Idea_Presentation_E-Waste_Setu.pdf)

@@ -1379,8 +1379,8 @@ def build_official_deck():
     r_b1_lbl = p_b1_h.add_run()
     set_font(r_b1_lbl, "PROTOTYPE WEB APPLICATION:  ", bold=True, size_pt=9.2, color=C_DARK_GREEN, font_name="Calibri")
     r_b1_lnk = p_b1_h.add_run()
-    set_font(r_b1_lnk, "https://ewastesetu.vercel.app ↗", bold=True, size_pt=9.2, color=C_BLUE_DARK, underline=True, font_name="Calibri")
-    r_b1_lnk.hyperlink.address = "https://ewastesetu.vercel.app"
+    set_font(r_b1_lnk, "https://recysaathi.vercel.app ↗", bold=True, size_pt=9.2, color=C_BLUE_DARK, underline=True, font_name="Calibri")
+    r_b1_lnk.hyperlink.address = "https://recysaathi.vercel.app"
 
     p_b1_d = tf_b1.add_paragraph()
     p_b1_d.alignment = PP_ALIGN.LEFT
