@@ -8,7 +8,7 @@ from pptx.enum.shapes import MSO_SHAPE
 # ==============================================================================
 # COLOR PALETTE (Winning Executive Tier)
 # ==============================================================================
-C_SLATE_900  = RGBColor(15, 23, 42)     # #0F172A - Deep Slate Primary Text
+C_BLACK      = RGBColor(15, 23, 42)     # #0F172A - Deep Slate/Black
 C_SLATE_700  = RGBColor(51, 65, 85)     # #334155 - Slate Body Text
 C_SLATE_500  = RGBColor(100, 116, 139)  # #64748B - Muted Subtitles
 C_DARK_GREEN = RGBColor(22, 101, 52)    # #166534 - Forest Green (Collector/Success)
@@ -25,9 +25,10 @@ C_BG_AMBER   = RGBColor(254, 243, 199)  # #FEF3C7 - Pastel Gold
 C_BG_PURPLE  = RGBColor(250, 245, 255)  # #FAF5FF - Pastel Lavender
 C_BG_GRAY    = RGBColor(248, 250, 252)  # #F8FAFC - Light Slate Gray
 
-FONT_FAMILY = "Calibri"
+FONT_TITLE = "Times New Roman"
+FONT_BODY  = "Calibri"
 
-def set_font(run, text, bold=False, size_pt=12.0, color=C_SLATE_700, underline=False, font_name=FONT_FAMILY):
+def set_font(run, text, bold=False, size_pt=12.0, color=C_SLATE_700, underline=False, font_name=FONT_BODY):
     run.text = text
     run.font.name = font_name
     run.font.bold = bold
@@ -57,34 +58,39 @@ def fix_team_oval(slide):
             if "Team" in txt or "Oval" in sh.name:
                 tf = sh.text_frame
                 tf.word_wrap = True
+                tf.margin_left = Inches(0.02)
+                tf.margin_right = Inches(0.02)
+                tf.margin_top = Inches(0.12)
+                tf.margin_bottom = Inches(0.04)
                 p = tf.paragraphs[0]
                 p.alignment = PP_ALIGN.CENTER
                 p.text = ""
-                r = p.add_run()
-                set_font(r, "HelloWorldWarriors", bold=True, size_pt=11.0, color=C_SLATE_900)
+                r1 = p.add_run()
+                set_font(r1, "HelloWorld\nWarriors", bold=True, size_pt=10.5, color=C_BLACK, font_name="Arial")
 
 def build_winning_deck(output_filename="final.pptx"):
     template_path = "SIH2026-IDEA-Presentation-Format.pptx"
     prs = pptx.Presentation(template_path)
 
     # ==========================================================================
-    # SLIDE 1: Cover & Team Overview (Flawless Layout & Zero Ghost Text)
+    # SLIDE 1: TITLE PAGE (Exact Match to SIH Template Style & Layout)
     # ==========================================================================
     s1 = prs.slides[0]
     
-    # 1. Update Title 7 (SMART INDIA HACKATHON 2026) and remove old placeholders
+    # 1. Update Title 7 (SMART INDIA HACKATHON 2026) in Garamond
     for sh in list(s1.shapes):
         if sh.name == "Title 7" or (sh.has_text_frame and "SMART INDIA" in sh.text_frame.text):
             p = sh.text_frame.paragraphs[0]
+            p.alignment = PP_ALIGN.CENTER
             p.text = ""
             r = p.add_run()
-            set_font(r, "SMART INDIA HACKATHON 2026", bold=True, size_pt=28.0, color=C_BLUE_DARK)
+            set_font(r, "SMART INDIA HACKATHON 2026", bold=True, size_pt=38.0, color=C_BLUE_DARK, font_name="Garamond")
         elif sh.name in ["Subtitle 3", "TextBox 9"] or (sh.has_text_frame and ("TITLE PAGE" in sh.text_frame.text or "Problem Statement ID" in sh.text_frame.text)):
             sp = sh._element
             sp.getparent().remove(sp)
 
-    # 2. Add Project Title & Subtitle box
-    tb_title = s1.shapes.add_textbox(Inches(0.60), Inches(0.85), Inches(6.50), Inches(1.15))
+    # 2. Add Project Title replacing TITLE PAGE in Times New Roman bold
+    tb_title = s1.shapes.add_textbox(Inches(0.60), Inches(0.80), Inches(7.20), Inches(1.25))
     tf_t = tb_title.text_frame
     tf_t.word_wrap = True
     tf_t.margin_left = 0
@@ -94,49 +100,45 @@ def build_winning_deck(output_filename="final.pptx"):
     
     p1 = tf_t.paragraphs[0]
     r1 = p1.add_run()
-    set_font(r1, "E-Waste Setu (ई-कचरा सेतु)", bold=True, size_pt=26.0, color=C_DARK_GREEN)
+    set_font(r1, "E-Waste Setu (ई-कचरा सेतु)", bold=True, size_pt=28.0, color=C_DARK_GREEN, font_name=FONT_TITLE)
     
     p2 = tf_t.add_paragraph()
-    p2.space_before = Pt(4.0)
+    p2.space_before = Pt(3.0)
     r2 = p2.add_run()
-    set_font(r2, "AI-Driven Vernacular Inclusion Platform for Informal Waste Workers", bold=False, size_pt=13.0, color=C_SLATE_700)
+    set_font(r2, "AI-Driven Vernacular Inclusion Platform for Informal Waste Workers", bold=False, size_pt=14.0, color=C_SLATE_700, font_name=FONT_TITLE)
 
-    # 3. Add Clean Official Metadata Card
-    sh_card = s1.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.60), Inches(2.10), Inches(6.50), Inches(4.75))
-    style_box(sh_card, bg_color=C_WHITE, border_color=C_DARK_GREEN, border_width_pt=1.5)
-    tf_m = sh_card.text_frame
+    # 3. Add Details Block exactly matching the template's TextBox 9 pointer list
+    tb_meta = s1.shapes.add_textbox(Inches(0.50), Inches(2.20), Inches(6.80), Inches(4.80))
+    tf_m = tb_meta.text_frame
     tf_m.vertical_anchor = MSO_ANCHOR.TOP
     tf_m.word_wrap = True
-    tf_m.margin_left = Inches(0.24)
-    tf_m.margin_right = Inches(0.20)
-    tf_m.margin_top = Inches(0.22)
-    tf_m.margin_bottom = Inches(0.18)
-
-    p_m_hdr = tf_m.paragraphs[0]
-    r_mh = p_m_hdr.add_run()
-    set_font(r_mh, "PROJECT & TEAM REGISTRATION DETAILS", bold=True, size_pt=13.5, color=C_DARK_GREEN)
+    tf_m.margin_left = 0
+    tf_m.margin_right = 0
+    tf_m.margin_top = 0
+    tf_m.margin_bottom = 0
 
     meta_items = [
-        ("Problem Statement ID:", "26229"),
-        ("Problem Statement Title:", "Kabadiwala Connect – Bringing Informal Collectors to Formal Recycling"),
-        ("Ministry / Nodal Body:", "Ministry of Mines (MoM) / JNARDDC"),
-        ("Theme & PS Category:", "Clean & Green Technology / Circular Economy  |  Software"),
-        ("Team Name & ID:", "HelloWorldWarriors  |  Team ID: 170413"),
-        ("Team Leader:", "Satya Prakash (Registered on Portal)"),
-        ("Live Prototype App:", "https://recysaathi.vercel.app")
+        ("Problem Statement ID –", " 26229"),
+        ("Problem Statement Title -", " Kabadiwala Connect – Bringing Informal Collectors to Formal Recycling"),
+        ("Theme -", " Clean & Green Technology / Circular Economy"),
+        ("PS Category -", " Software"),
+        ("Team ID -", " 170413"),
+        ("Team Name (Registered on portal) -", " HelloWorldWarriors"),
+        ("Team Leader -", " Satya Prakash"),
+        ("Prototype Web App -", " https://recysaathi.vercel.app")
     ]
 
-    for lbl, val in meta_items:
-        p = tf_m.add_paragraph()
-        p.space_before = Pt(8.0)
+    for idx, (lbl, val) in enumerate(meta_items):
+        p = tf_m.paragraphs[0] if idx == 0 else tf_m.add_paragraph()
+        p.space_before = Pt(10.0) if idx > 0 else Pt(0.0)
         p.space_after = Pt(0.0)
         r_l = p.add_run()
-        set_font(r_l, f"• {lbl} ", bold=True, size_pt=13.0, color=C_DARK_GREEN)
+        set_font(r_l, f"• {lbl}", bold=True, size_pt=14.0, color=C_BLACK, font_name="Arial")
         r_v = p.add_run()
-        set_font(r_v, val, bold=("26229" in val or "HelloWorldWarriors" in val), size_pt=13.0, color=C_SLATE_900)
+        set_font(r_v, val, bold=("26229" in val or "HelloWorldWarriors" in val), size_pt=13.5, color=C_BLACK, font_name="Arial")
 
     # ==========================================================================
-    # SLIDE 2: Idea Title & Proposed Solution
+    # SLIDE 2: IDEA TITLE & PROPOSED SOLUTION (Exact Template Pointers & Style)
     # ==========================================================================
     s2 = prs.slides[1]
     fix_team_oval(s2)
@@ -145,24 +147,25 @@ def build_winning_deck(output_filename="final.pptx"):
     for sh in s2.shapes:
         if sh.name == "Title 1":
             p = sh.text_frame.paragraphs[0]
+            p.alignment = PP_ALIGN.CENTER
             p.text = ""
             r = p.add_run()
-            set_font(r, "IDEA TITLE: E-Waste Setu (ई-कचरा सेतु)", bold=True, size_pt=28.0, color=C_SLATE_900)
+            set_font(r, "IDEA TITLE: E-Waste Setu (ई-कचरा सेतु)", bold=True, size_pt=34.0, color=C_BLACK, font_name=FONT_TITLE)
 
     # Subtitle
-    sub2 = s2.shapes.add_textbox(Inches(0.60), Inches(1.08), Inches(12.13), Inches(0.30))
+    sub2 = s2.shapes.add_textbox(Inches(0.60), Inches(1.06), Inches(12.13), Inches(0.28))
     tf_sub2 = sub2.text_frame
     tf_sub2.word_wrap = True
     tf_sub2.margin_left = 0
     tf_sub2.margin_top = 0
     p_s2 = tf_sub2.paragraphs[0]
     r_s2_1 = p_s2.add_run()
-    set_font(r_s2_1, "Core Formal Supply Chain: ", bold=True, size_pt=13.0, color=C_SLATE_900)
+    set_font(r_s2_1, "Core Formal Supply Chain: ", bold=True, size_pt=13.0, color=C_BLACK, font_name=FONT_TITLE)
     r_s2_2 = p_s2.add_run()
-    set_font(r_s2_2, "Informal Waste-Picker ➔ Local Aggregator Hub ➔ Bulk Consignment ➔ CPCB Recycler", bold=False, size_pt=12.0, color=C_DARK_GREEN)
+    set_font(r_s2_2, "Informal Waste-Picker ➔ Local Aggregator Hub ➔ Bulk Consignment ➔ CPCB Recycler", bold=False, size_pt=12.5, color=C_DARK_GREEN)
 
-    # TOP LEFT: Ground Problems & Failures (w=5.92, h=2.50)
-    sh_p2 = s2.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.60), Inches(1.42), Inches(5.92), Inches(2.50))
+    # TOP LEFT: Pointer 2 & 3: How it addresses the problem & Ground Failures (w=5.92, h=2.55)
+    sh_p2 = s2.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.60), Inches(1.38), Inches(5.92), Inches(2.55))
     style_box(sh_p2, bg_color=C_WHITE, border_color=C_RED_DARK, border_width_pt=1.5)
     tf_p2 = sh_p2.text_frame
     tf_p2.vertical_anchor = MSO_ANCHOR.TOP
@@ -174,13 +177,15 @@ def build_winning_deck(output_filename="final.pptx"):
 
     p_p2_h = tf_p2.paragraphs[0]
     r_p2_ht = p_p2_h.add_run()
-    set_font(r_p2_ht, "GROUND PROBLEMS & SYSTEMIC FAILURES", bold=True, size_pt=14.0, color=C_RED_DARK)
+    set_font(r_p2_ht, "HOW IT ADDRESSES THE PROBLEM", bold=True, size_pt=13.5, color=C_RED_DARK, font_name=FONT_TITLE)
+    r_p2_sub = p_p2_h.add_run()
+    set_font(r_p2_sub, "  |  Ground Failures Solved", bold=False, size_pt=11.5, color=C_SLATE_500)
 
     p_bullets = [
-        ("25%–40% Price Skimming: ", "Unregulated middlemen eyeball high-value PCBs as mixed scrap, pocketing metal value."),
-        ("Physical Scale Tampering: ", "Mechanical spring scales routinely discount weight by 10%–15% at informal scrap yards."),
-        ("Backyard Acid Smelting: ", "Fragmented informal chains burn wires in open slums, causing severe toxic lead & dioxin poisoning."),
-        ("Extreme Digital Friction: ", "Text-heavy English apps fail; collectors require vernacular voice guidance & visual touch UI.")
+        ("25%–40% Middleman Price Skimming: ", "Eliminated via live transparent LME benchmark floor rates."),
+        ("Physical Scale Tampering (10%–15% loss): ", "Halted via smartphone camera scale OCR proof bound to lot ID."),
+        ("Backyard Toxic Acid Smelting: ", "Diverts toxic PCBs into certified formal hydrometallurgical refiners."),
+        ("Extreme Digital Illiteracy: ", "Overcomes reading barriers with 10+ Indic voice models & visual touch UI.")
     ]
 
     for b_lbl, b_val in p_bullets:
@@ -192,8 +197,8 @@ def build_winning_deck(output_filename="final.pptx"):
         r_bv = p_b.add_run()
         set_font(r_bv, b_val, bold=False, size_pt=12.0, color=C_SLATE_700)
 
-    # TOP RIGHT: Proposed Solution & Handover Flow (w=6.05, h=2.50)
-    sh_s2_r = s2.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(6.68), Inches(1.42), Inches(6.05), Inches(2.50))
+    # TOP RIGHT: Pointer 1: Proposed Solution (Describe your Idea/Solution/Prototype) (w=6.05, h=2.55)
+    sh_s2_r = s2.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(6.68), Inches(1.38), Inches(6.05), Inches(2.55))
     style_box(sh_s2_r, bg_color=C_WHITE, border_color=C_DARK_GREEN, border_width_pt=1.5)
     tf_s2_r = sh_s2_r.text_frame
     tf_s2_r.vertical_anchor = MSO_ANCHOR.TOP
@@ -205,14 +210,14 @@ def build_winning_deck(output_filename="final.pptx"):
 
     p_s2_rh = tf_s2_r.paragraphs[0]
     r_s2_rht = p_s2_rh.add_run()
-    set_font(r_s2_rht, "PROPOSED SOLUTION & END-TO-END FLOW", bold=True, size_pt=14.0, color=C_DARK_GREEN)
+    set_font(r_s2_rht, "PROPOSED SOLUTION (Idea / Solution / Prototype)", bold=True, size_pt=13.5, color=C_DARK_GREEN, font_name=FONT_TITLE)
 
     flow_steps = [
-        ("1. Voice / Visual Logging: ", "Collector snaps photo; on-device AI tags scrap category and displays live floor rates."),
-        ("2. Digital Scale Capture: ", "Phone camera extracts scale display readout via OCR, binding weight proof to lot ID."),
-        ("3. Local Hub Handover: ", "Aggregator scans lot; verifies weight & pays instant Cash or UPI with digital receipt."),
-        ("4. Bulk Consolidation: ", "Hub aggregates small lots into 1-ton bulk batches; scheduled milk-run truck dispatch."),
-        ("5. Recycler Verification: ", "Authorized recycler confirms QR custody; auto-generates verified CPCB Form-6 manifest.")
+        ("1. Voice / Visual Logging: ", "Snaps scrap photo; AI tags category & displays live floor prices."),
+        ("2. Scale OCR Capture: ", "Phone camera extracts scale digits, binding photo proof to lot ID."),
+        ("3. Local Hub Handover: ", "Aggregator scans lot; verifies weight & pays instant UPI/Cash."),
+        ("4. Bulk Milk-Run: ", "Consolidates small lots into 1-ton batches with truck dispatch."),
+        ("5. Recycler Verification: ", "Authorized recycler confirms QR; auto-generates CPCB Form-6.")
     ]
 
     for s_lbl, s_val in flow_steps:
@@ -224,19 +229,19 @@ def build_winning_deck(output_filename="final.pptx"):
         r_sv = p_s.add_run()
         set_font(r_sv, s_val, bold=False, size_pt=12.0, color=C_SLATE_700)
 
-    # Middle Header
-    tb_inn_hdr = s2.shapes.add_textbox(Inches(0.60), Inches(4.04), Inches(12.13), Inches(0.24))
+    # Middle Header: Pointer 4: Innovation and uniqueness of the solution
+    tb_inn_hdr = s2.shapes.add_textbox(Inches(0.60), Inches(4.02), Inches(12.13), Inches(0.26))
     tf_ih = tb_inn_hdr.text_frame
     tf_ih.word_wrap = True
     tf_ih.margin_left = 0
     tf_ih.margin_top = 0
     p_ih = tf_ih.paragraphs[0]
     r_iht = p_ih.add_run()
-    set_font(r_iht, "INNOVATION & CORE UNIQUENESS OF THE SOLUTION: ", bold=True, size_pt=13.0, color=C_SLATE_900)
+    set_font(r_iht, "INNOVATION AND UNIQUENESS OF THE SOLUTION: ", bold=True, size_pt=13.5, color=C_BLACK, font_name=FONT_TITLE)
     r_ihsub = p_ih.add_run()
     set_font(r_ihsub, "Zero-Disruption Architecture Built for Real-World Field Adoption", bold=False, size_pt=12.0, color=C_BLUE_MID)
 
-    # BOTTOM: 4 Innovation Cards (w=2.93, h=2.54)
+    # BOTTOM: 4 Innovation Cards (w=2.93, h=2.50)
     innovations = [
         ("INNOVATION 1", "Local Aggregator Hubs", C_DARK_GREEN,
          [("Scrap Hub Inclusion: ", "Onboards existing informal scrap shops as certified collection hubs instead of disintermediating them."),
@@ -257,7 +262,7 @@ def build_winning_deck(output_filename="final.pptx"):
 
     for idx, (inn_tag, inn_title, inn_col, inn_bullets) in enumerate(innovations):
         x_c = Inches(0.60) + idx * (Inches(2.93) + Inches(0.14))
-        sh_c = s2.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x_c, Inches(4.34), Inches(2.93), Inches(2.54))
+        sh_c = s2.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x_c, Inches(4.32), Inches(2.93), Inches(2.50))
         style_box(sh_c, bg_color=C_WHITE, border_color=inn_col, border_width_pt=1.5)
         tf_c = sh_c.text_frame
         tf_c.vertical_anchor = MSO_ANCHOR.TOP
@@ -271,7 +276,7 @@ def build_winning_deck(output_filename="final.pptx"):
         r_tag = p_ch.add_run()
         set_font(r_tag, f"{inn_tag}\n", bold=True, size_pt=11.5, color=inn_col)
         r_tit = p_ch.add_run()
-        set_font(r_tit, inn_title, bold=True, size_pt=13.5, color=C_SLATE_900)
+        set_font(r_tit, inn_title, bold=True, size_pt=13.0, color=C_BLACK, font_name=FONT_TITLE)
 
         for b_lbl, b_val in inn_bullets:
             p_b = tf_c.add_paragraph()
@@ -283,7 +288,7 @@ def build_winning_deck(output_filename="final.pptx"):
             set_font(r_bv, b_val, bold=False, size_pt=12.0, color=C_SLATE_700)
 
     # ==========================================================================
-    # SLIDE 3: Technical Approach
+    # SLIDE 3: TECHNICAL APPROACH (Exact Template Pointers & Style)
     # ==========================================================================
     s3 = prs.slides[2]
     fix_team_oval(s3)
@@ -292,24 +297,26 @@ def build_winning_deck(output_filename="final.pptx"):
     for sh in s3.shapes:
         if sh.name == "Title 1":
             p = sh.text_frame.paragraphs[0]
+            p.alignment = PP_ALIGN.CENTER
             p.text = ""
             r = p.add_run()
-            set_font(r, "TECHNICAL APPROACH", bold=True, size_pt=28.0, color=C_SLATE_900)
+            set_font(r, "TECHNICAL APPROACH", bold=True, size_pt=34.0, color=C_BLACK, font_name=FONT_TITLE)
 
     # Subtitle
-    sub3 = s3.shapes.add_textbox(Inches(0.60), Inches(1.08), Inches(12.13), Inches(0.30))
+    sub3 = s3.shapes.add_textbox(Inches(0.60), Inches(1.06), Inches(12.13), Inches(0.28))
     tf_sub3 = sub3.text_frame
     tf_sub3.word_wrap = True
     tf_sub3.margin_left = 0
     tf_sub3.margin_top = 0
     p_s3 = tf_sub3.paragraphs[0]
     r_s3_1 = p_s3.add_run()
-    set_font(r_s3_1, "End-to-End System Pipeline & Technology Architecture: ", bold=True, size_pt=13.0, color=C_SLATE_900)
+    set_font(r_s3_1, "System Architecture & Implementation Pipeline: ", bold=True, size_pt=13.0, color=C_BLACK, font_name=FONT_TITLE)
     r_s3_2 = p_s3.add_run()
-    set_font(r_s3_2, "Offline-First Mobile PWA, Multi-Modal AI Engines & Spatial Dispatch", bold=False, size_pt=12.0, color=C_DARK_GREEN)
+    set_font(r_s3_2, "Offline-First Mobile PWA, Multi-Modal AI Engines & Spatial Dispatch", bold=False, size_pt=12.5, color=C_DARK_GREEN)
 
-    # LEFT TOP: Production Tech Stack (w=5.35, h=2.65)
-    sh_ts = s3.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.60), Inches(1.42), Inches(5.35), Inches(2.65))
+    # LEFT: Pointer 1: Technologies to be used (e.g. programming languages, frameworks, hardware)
+    # Box 1: Production Tech Stack (w=5.35, h=2.65)
+    sh_ts = s3.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.60), Inches(1.38), Inches(5.35), Inches(2.65))
     style_box(sh_ts, bg_color=C_WHITE, border_color=C_DARK_GREEN, border_width_pt=1.5)
     tf_ts = sh_ts.text_frame
     tf_ts.vertical_anchor = MSO_ANCHOR.TOP
@@ -321,7 +328,7 @@ def build_winning_deck(output_filename="final.pptx"):
 
     p_tsh = tf_ts.paragraphs[0]
     r_tsh = p_tsh.add_run()
-    set_font(r_tsh, "PRODUCTION TECH STACK ARCHITECTURE", bold=True, size_pt=14.0, color=C_DARK_GREEN)
+    set_font(r_tsh, "TECHNOLOGIES TO BE USED: System Stack", bold=True, size_pt=13.5, color=C_DARK_GREEN, font_name=FONT_TITLE)
 
     ts_points = [
         ("Client / Mobile: ", "React 18 PWA + Vite with offline-first IndexedDB (zero app store barrier, ₹4k phones)."),
@@ -339,8 +346,8 @@ def build_winning_deck(output_filename="final.pptx"):
         r_bv = p_b.add_run()
         set_font(r_bv, b_val, bold=False, size_pt=12.0, color=C_SLATE_700)
 
-    # LEFT BOTTOM: AI & Platform Intelligence (w=5.35, h=2.68)
-    sh_ai = s3.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.60), Inches(4.20), Inches(5.35), Inches(2.68))
+    # Box 2: AI & Platform Engines (w=5.35, h=2.68)
+    sh_ai = s3.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.60), Inches(4.16), Inches(5.35), Inches(2.68))
     style_box(sh_ai, bg_color=C_WHITE, border_color=C_BLUE_MID, border_width_pt=1.5)
     tf_ai = sh_ai.text_frame
     tf_ai.vertical_anchor = MSO_ANCHOR.TOP
@@ -352,7 +359,7 @@ def build_winning_deck(output_filename="final.pptx"):
 
     p_aih = tf_ai.paragraphs[0]
     r_aih = p_aih.add_run()
-    set_font(r_aih, "AI & PLATFORM INTELLIGENCE ENGINES", bold=True, size_pt=14.0, color=C_BLUE_MID)
+    set_font(r_aih, "TECHNOLOGIES TO BE USED: AI & ML Engines", bold=True, size_pt=13.5, color=C_BLUE_MID, font_name=FONT_TITLE)
 
     ai_points = [
         ("Visual Scrap AI: ", "Quantized MobileNetV3 (<5MB) classifies motherboards, motors & copper wire in real time."),
@@ -370,15 +377,15 @@ def build_winning_deck(output_filename="final.pptx"):
         r_bv = p_b.add_run()
         set_font(r_bv, b_val, bold=False, size_pt=12.0, color=C_SLATE_700)
 
-    # RIGHT: 5 Methodology Pipeline Cards + Traceability Strip
-    tb_meth_hdr = s3.shapes.add_textbox(Inches(6.15), Inches(1.42), Inches(6.58), Inches(0.24))
+    # RIGHT: Pointer 2: Methodology and process for implementation (Flow Charts/Images/ working prototype)
+    tb_meth_hdr = s3.shapes.add_textbox(Inches(6.15), Inches(1.38), Inches(6.58), Inches(0.26))
     tf_mh = tb_meth_hdr.text_frame
     tf_mh.word_wrap = True
     tf_mh.margin_left = 0
     tf_mh.margin_top = 0
     p_mh = tf_mh.paragraphs[0]
     r_mht = p_mh.add_run()
-    set_font(r_mht, "OPERATIONAL LIFECYCLE: 5-STEP VISUAL PROCESSING PIPELINE", bold=True, size_pt=13.5, color=C_SLATE_900)
+    set_font(r_mht, "METHODOLOGY AND PROCESS FOR IMPLEMENTATION", bold=True, size_pt=13.5, color=C_BLACK, font_name=FONT_TITLE)
 
     pipe_steps = [
         ("STEP 1: COLLECT & IDENTIFY", C_DARK_GREEN, C_BG_GREEN,
@@ -397,7 +404,7 @@ def build_winning_deck(output_filename="final.pptx"):
          "Authorized recycler scans batch QR; confirms custody and auto-submits digital CPCB Form-6 manifest to EPR portal.")
     ]
 
-    y_pipe_start = Inches(1.70)
+    y_pipe_start = Inches(1.68)
     h_pipe_card = Inches(0.82)
     gap_pipe = Inches(0.08)
 
@@ -420,10 +427,10 @@ def build_winning_deck(output_filename="final.pptx"):
         p_d = tf_pc.add_paragraph()
         p_d.space_before = Pt(1.5)
         r_pd = p_d.add_run()
-        set_font(r_pd, p_desc, bold=False, size_pt=12.0, color=C_SLATE_900)
+        set_font(r_pd, p_desc, bold=False, size_pt=12.0, color=C_BLACK)
 
-    # Bottom Verifiable Chain of Custody Strip
-    y_strip = Inches(6.24)
+    # Bottom Verifiable Custody Strip
+    y_strip = Inches(6.22)
     h_strip = Inches(0.58)
     sh_str = s3.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(6.15), y_strip, Inches(6.58), h_strip)
     style_box(sh_str, bg_color=C_WHITE, border_color=C_DARK_GREEN, border_width_pt=1.5)
@@ -437,10 +444,10 @@ def build_winning_deck(output_filename="final.pptx"):
     r_str_tag = p_str.add_run()
     set_font(r_str_tag, "VERIFIABLE CUSTODY STRIP: ", bold=True, size_pt=12.5, color=C_DARK_GREEN)
     r_str_txt = p_str.add_run()
-    set_font(r_str_txt, "Photo Proof ➔ Scale OCR ➔ GPS Origin ➔ Dynamic QR ➔ Recycler Intake", bold=True, size_pt=12.0, color=C_SLATE_900)
+    set_font(r_str_txt, "Photo Proof ➔ Scale OCR ➔ GPS Origin ➔ Dynamic QR ➔ Recycler Intake", bold=True, size_pt=12.0, color=C_BLACK)
 
     # ==========================================================================
-    # SLIDE 4: Feasibility and Viability (Polished Clean Table & Cards)
+    # SLIDE 4: FEASIBILITY AND VIABILITY (Exact Template Pointers & Style)
     # ==========================================================================
     s4 = prs.slides[3]
     fix_team_oval(s4)
@@ -449,29 +456,30 @@ def build_winning_deck(output_filename="final.pptx"):
     for sh in s4.shapes:
         if sh.name == "Title 1":
             p = sh.text_frame.paragraphs[0]
+            p.alignment = PP_ALIGN.CENTER
             p.text = ""
             r = p.add_run()
-            set_font(r, "FEASIBILITY AND VIABILITY", bold=True, size_pt=28.0, color=C_SLATE_900)
+            set_font(r, "FEASIBILITY AND VIABILITY", bold=True, size_pt=34.0, color=C_BLACK, font_name=FONT_TITLE)
 
     # Subtitle
-    sub4 = s4.shapes.add_textbox(Inches(0.60), Inches(1.08), Inches(12.13), Inches(0.30))
+    sub4 = s4.shapes.add_textbox(Inches(0.60), Inches(1.06), Inches(12.13), Inches(0.28))
     tf_sub4 = sub4.text_frame
     tf_sub4.word_wrap = True
     tf_sub4.margin_left = 0
     tf_sub4.margin_top = 0
     p_s4 = tf_sub4.paragraphs[0]
     r_s4_1 = p_s4.add_run()
-    set_font(r_s4_1, "Defensible Ground Viability: ", bold=True, size_pt=13.0, color=C_SLATE_900)
+    set_font(r_s4_1, "Defensible Ground Viability: ", bold=True, size_pt=13.0, color=C_BLACK, font_name=FONT_TITLE)
     r_s4_2 = p_s4.add_run()
-    set_font(r_s4_2, "Multi-Pillar Feasibility Analysis & Ground Risk Mitigation Matrix", bold=False, size_pt=12.0, color=C_DARK_GREEN)
+    set_font(r_s4_2, "Multi-Pillar Feasibility Analysis & Ground Risk Mitigation Matrix", bold=False, size_pt=12.5, color=C_DARK_GREEN)
 
-    # LEFT: 3 Feasibility Cards (w=5.50, h=1.70 each)
+    # LEFT: Pointer 1: Analysis of the feasibility of the idea (3 Cards, w=5.50, h=1.68)
     feasibility_cards = [
         ("TECHNICAL FEASIBILITY", "Zero-Capex Architecture", C_BLUE_DARK,
          [("Budget Device Support: ", "Lightweight PWA runs smoothly on entry-level ₹4,000 Android phones without extra apps."),
           ("Offline-First Resilience: ", "Encrypted IndexedDB queues transactions locally during 2G dead zones; auto-syncs on reconnect.")]),
 
-        ("OPERATIONAL FEASIBILITY", "Aligned with Field Scrap Realities", C_DARK_GREEN,
+        ("OPERATIONAL FEASIBILITY", "Aligned with Field Realities", C_DARK_GREEN,
          [("Existing Hub Onboarding: ", "Integrates local scrap dealers as certified hubs rather than attempting to bypass them."),
           ("Zero Literacy Hurdle: ", "Vernacular voice navigation and visual component icons remove all reading and typing friction.")]),
 
@@ -480,8 +488,8 @@ def build_winning_deck(output_filename="final.pptx"):
           ("Sustainable Monetization: ", "1.5% transaction commission paid by recyclers + B2B enterprise EPR compliance SaaS for brand OEMs.")])
     ]
 
-    y_f_start = Inches(1.42)
-    h_f_card = Inches(1.70)
+    y_f_start = Inches(1.38)
+    h_f_card = Inches(1.68)
     gap_f = Inches(0.12)
 
     for idx, (f_title, f_sub, f_col, f_bullets) in enumerate(feasibility_cards):
@@ -498,7 +506,7 @@ def build_winning_deck(output_filename="final.pptx"):
 
         p_fh = tf_fc.paragraphs[0]
         r_fht = p_fh.add_run()
-        set_font(r_fht, f_title, bold=True, size_pt=13.5, color=f_col)
+        set_font(r_fht, f_title, bold=True, size_pt=13.0, color=f_col, font_name=FONT_TITLE)
         r_fhsub = p_fh.add_run()
         set_font(r_fhsub, f"  |  {f_sub}", bold=False, size_pt=11.5, color=C_SLATE_500)
 
@@ -511,23 +519,23 @@ def build_winning_deck(output_filename="final.pptx"):
             r_bv = p_b.add_run()
             set_font(r_bv, b_val, bold=False, size_pt=12.0, color=C_SLATE_700)
 
-    # RIGHT: Defensible Risk Mitigation Table (w=6.45)
-    tb_risk_hdr = s4.shapes.add_textbox(Inches(6.28), Inches(1.42), Inches(6.45), Inches(0.24))
+    # RIGHT: Pointer 2 & 3: Potential challenges and risks & Strategies for overcoming these challenges
+    tb_risk_hdr = s4.shapes.add_textbox(Inches(6.28), Inches(1.38), Inches(6.45), Inches(0.26))
     tf_rh = tb_risk_hdr.text_frame
     tf_rh.word_wrap = True
     tf_rh.margin_left = 0
     tf_rh.margin_top = 0
     p_rh = tf_rh.paragraphs[0]
     r_rht = p_rh.add_run()
-    set_font(r_rht, "DEFENSIBLE RISK MITIGATION: CHALLENGES & SOLUTIONS", bold=True, size_pt=13.5, color=C_SLATE_900)
+    set_font(r_rht, "POTENTIAL CHALLENGES, RISKS & STRATEGIES FOR OVERCOMING", bold=True, size_pt=13.0, color=C_BLACK, font_name=FONT_TITLE)
 
-    table_shape = s4.shapes.add_table(6, 2, Inches(6.28), Inches(1.72), Inches(6.45), Inches(5.16))
+    table_shape = s4.shapes.add_table(6, 2, Inches(6.28), Inches(1.68), Inches(6.45), Inches(5.10))
     tbl = table_shape.table
     tbl.columns[0].width = Inches(2.65)
     tbl.columns[1].width = Inches(3.80)
     tbl.rows[0].height = Inches(0.40)
     for r_i in range(1, 6):
-        tbl.rows[r_i].height = Inches(0.92)
+        tbl.rows[r_i].height = Inches(0.90)
 
     # Header Row
     c_h0 = tbl.cell(0, 0)
@@ -536,7 +544,7 @@ def build_winning_deck(output_filename="final.pptx"):
     p = c_h0.text_frame.paragraphs[0]
     p.margin_left = Inches(0.10)
     r = p.add_run()
-    set_font(r, "GROUND CHALLENGE / RISK", bold=True, size_pt=12.5, color=C_WHITE)
+    set_font(r, "POTENTIAL CHALLENGES & RISKS", bold=True, size_pt=12.0, color=C_WHITE, font_name=FONT_TITLE)
 
     c_h1 = tbl.cell(0, 1)
     c_h1.fill.solid()
@@ -544,7 +552,7 @@ def build_winning_deck(output_filename="final.pptx"):
     p = c_h1.text_frame.paragraphs[0]
     p.margin_left = Inches(0.10)
     r = p.add_run()
-    set_font(r, "OUR PRACTICAL SOLUTION", bold=True, size_pt=12.5, color=C_WHITE)
+    set_font(r, "STRATEGIES FOR OVERCOMING", bold=True, size_pt=12.0, color=C_WHITE, font_name=FONT_TITLE)
 
     risk_rows = [
         ("Low Digital Literacy:\nInformal collectors struggle with text-heavy smartphone apps.",
@@ -572,7 +580,7 @@ def build_winning_deck(output_filename="final.pptx"):
         p0.margin_left = Inches(0.08)
         p0.margin_top = Inches(0.04)
         r0 = p0.add_run()
-        set_font(r0, r_c0, bold=False, size_pt=12.0, color=C_SLATE_900)
+        set_font(r0, r_c0, bold=False, size_pt=12.0, color=C_BLACK)
 
         c1 = tbl.cell(row_num, 1)
         c1.fill.solid()
@@ -584,7 +592,7 @@ def build_winning_deck(output_filename="final.pptx"):
         set_font(r1, r_c1, bold=False, size_pt=12.0, color=C_SLATE_700)
 
     # ==========================================================================
-    # SLIDE 5: Impact and Benefits (Zero Overlap, Snug Geometry, High Impact)
+    # SLIDE 5: IMPACT AND BENEFITS (Exact Template Pointers & Style, Zero Overflow)
     # ==========================================================================
     s5 = prs.slides[4]
     fix_team_oval(s5)
@@ -593,23 +601,24 @@ def build_winning_deck(output_filename="final.pptx"):
     for sh in s5.shapes:
         if sh.name == "Title 1":
             p = sh.text_frame.paragraphs[0]
+            p.alignment = PP_ALIGN.CENTER
             p.text = ""
             r = p.add_run()
-            set_font(r, "IMPACT AND BENEFITS", bold=True, size_pt=28.0, color=C_SLATE_900)
+            set_font(r, "IMPACT AND BENEFITS", bold=True, size_pt=34.0, color=C_BLACK, font_name=FONT_TITLE)
 
     # Subtitle
-    sub5 = s5.shapes.add_textbox(Inches(0.60), Inches(1.05), Inches(12.13), Inches(0.28))
+    sub5 = s5.shapes.add_textbox(Inches(0.60), Inches(1.05), Inches(12.13), Inches(0.26))
     tf_sub5 = sub5.text_frame
     tf_sub5.word_wrap = True
     tf_sub5.margin_left = 0
     tf_sub5.margin_top = 0
     p_s5 = tf_sub5.paragraphs[0]
     r_s5_1 = p_s5.add_run()
-    set_font(r_s5_1, "Stakeholder Value Transformation, Macro Impacts & Business Model: ", bold=True, size_pt=13.0, color=C_SLATE_900)
+    set_font(r_s5_1, "Stakeholder Value Transformation & Macro Impacts: ", bold=True, size_pt=13.0, color=C_BLACK, font_name=FONT_TITLE)
     r_s5_2 = p_s5.add_run()
-    set_font(r_s5_2, "Multi-Tier Value Creation Across the Informal-to-Formal Recycling Chain", bold=False, size_pt=12.0, color=C_DARK_GREEN)
+    set_font(r_s5_2, "Multi-Tier Value Creation Across the Informal-to-Formal Recycling Chain", bold=False, size_pt=12.5, color=C_DARK_GREEN)
 
-    # TOP ROW: 4 Stakeholder Transformation Cards (w=2.93, h=1.62, y=1.35)
+    # TOP ROW: Pointer 1: Potential impact on the target audience (w=2.93, h=1.62, y=1.35)
     stakeholders = [
         ("1. INFORMAL COLLECTORS", C_DARK_GREEN,
          [("Before: ", "25%–40% skimmed by middlemen; scale tampering."),
@@ -646,7 +655,7 @@ def build_winning_deck(output_filename="final.pptx"):
 
         p_h = tf_c.paragraphs[0]
         r_ht = p_h.add_run()
-        set_font(r_ht, st_title, bold=True, size_pt=12.5, color=st_col)
+        set_font(r_ht, st_title, bold=True, size_pt=12.5, color=st_col, font_name=FONT_TITLE)
 
         for b_lbl, b_val in st_bullets:
             p_b = tf_c.add_paragraph()
@@ -659,24 +668,24 @@ def build_winning_deck(output_filename="final.pptx"):
             r_bv = p_b.add_run()
             set_font(r_bv, b_val, bold=is_val, size_pt=12.0, color=st_col if is_val else C_SLATE_700)
 
-    # MIDDLE ROW: 3 Macro Impact Areas (w=3.95, h=1.45, y=3.08)
+    # MIDDLE ROW: Pointer 2: Benefits of the solution (social, economic, environmental, etc.) (w=3.95, h=1.48, y=3.08)
     macro_impacts = [
-        ("SOCIAL IMPACT | Livelihoods & Safety", C_BLUE_MID,
-         [("Financial Inclusion: ", "Digital transaction ledger unlocks formal credit, banking & micro-loans."),
-          ("Worker Dignity: ", "Transitions informal waste-pickers into recognized, certified green collar workers.")]),
+        ("BENEFITS: SOCIAL IMPACT", C_BLUE_MID,
+         [("Financial Inclusion: ", "Digital transaction ledger unlocks formal micro-loans & banking."),
+          ("Worker Dignity: ", "Direct formal identity & certified green collar status in circular chain.")]),
 
-        ("ECONOMIC IMPACT | Market Efficiency", C_AMBER_DARK,
-         [("Price Transparency: ", "Live LME benchmark floor completely halts predatory 25%–40% middleman price cuts."),
-          ("Logistics Optimization: ", "Consolidated milk-run truck dispatch lowers recycler freight costs by 35%.")]),
+        ("BENEFITS: ECONOMIC IMPACT", C_AMBER_DARK,
+         [("Price Transparency: ", "Live LME benchmark stops 25%–40% predatory middleman cuts."),
+          ("Logistics Optimization: ", "Consolidated milk-run truck dispatch lowers freight costs by 35%.")]),
 
-        ("ENVIRONMENTAL IMPACT | Toxic Diversion", C_DARK_GREEN,
-         [("Zero Toxic Burning: ", "Diverts toxic PCBs away from backyard acid baths and open-wire burning in slums."),
-          ("Critical Minerals: ", "Secures domestic hydrometallurgical recovery of high-purity Cu, Au, Ag & Li.")])
+        ("BENEFITS: ENVIRONMENTAL IMPACT", C_DARK_GREEN,
+         [("Zero Toxic Burning: ", "Diverts PCBs away from crude acid baths and open burning in slums."),
+          ("Critical Minerals: ", "Secures domestic recovery of pure Cu, Au, Ag & essential battery Li.")])
     ]
 
     for idx, (m_title, m_col, m_bullets) in enumerate(macro_impacts):
         x_m = Inches(0.60) + idx * (Inches(3.95) + Inches(0.14))
-        sh_m = s5.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x_m, Inches(3.08), Inches(3.95), Inches(1.45))
+        sh_m = s5.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x_m, Inches(3.08), Inches(3.95), Inches(1.48))
         style_box(sh_m, bg_color=C_WHITE, border_color=m_col, border_width_pt=1.5)
         tf_m = sh_m.text_frame
         tf_m.vertical_anchor = MSO_ANCHOR.TOP
@@ -688,26 +697,26 @@ def build_winning_deck(output_filename="final.pptx"):
 
         p_h = tf_m.paragraphs[0]
         r_ht = p_h.add_run()
-        set_font(r_ht, m_title, bold=True, size_pt=12.5, color=m_col)
+        set_font(r_ht, m_title, bold=True, size_pt=12.5, color=m_col, font_name=FONT_TITLE)
 
         for b_lbl, b_val in m_bullets:
             p_b = tf_m.add_paragraph()
-            p_b.space_before = Pt(4.0)
+            p_b.space_before = Pt(3.0)
             p_b.space_after = Pt(0.0)
             r_bl = p_b.add_run()
             set_font(r_bl, f"• {b_lbl}", bold=True, size_pt=12.0, color=m_col)
             r_bv = p_b.add_run()
             set_font(r_bv, b_val, bold=False, size_pt=12.0, color=C_SLATE_700)
 
-    # BOTTOM ROW: Business Model & Financial Sustainability (Header + 4 Cards, w=2.93, h=1.70, y=5.02)
-    tb_bm_hdr = s5.shapes.add_textbox(Inches(0.60), Inches(4.72), Inches(12.13), Inches(0.24))
+    # BOTTOM ROW: Financial Sustainability & Business Model (Header + 4 Cards, w=2.93, h=1.70, y=5.00)
+    tb_bm_hdr = s5.shapes.add_textbox(Inches(0.60), Inches(4.70), Inches(12.13), Inches(0.26))
     tf_bm = tb_bm_hdr.text_frame
     tf_bm.word_wrap = True
     tf_bm.margin_left = 0
     tf_bm.margin_top = 0
     p_bm = tf_bm.paragraphs[0]
     r_bmt = p_bm.add_run()
-    set_font(r_bmt, "BUSINESS MODEL & FINANCIAL SUSTAINABILITY: ", bold=True, size_pt=13.5, color=C_SLATE_900)
+    set_font(r_bmt, "FINANCIAL SUSTAINABILITY & BUSINESS MODEL: ", bold=True, size_pt=13.5, color=C_BLACK, font_name=FONT_TITLE)
     r_bmsub = p_bm.add_run()
     set_font(r_bmsub, "Self-Reinforcing Commercial Architecture with Zero Burden on Informal Workers", bold=False, size_pt=12.0, color=C_DARK_GREEN)
 
@@ -731,7 +740,7 @@ def build_winning_deck(output_filename="final.pptx"):
 
     for idx, (b_title, b_col, b_bullets) in enumerate(biz_pillars):
         x_b = Inches(0.60) + idx * (Inches(2.93) + Inches(0.14))
-        sh_b = s5.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x_b, Inches(4.98), Inches(2.93), Inches(1.72))
+        sh_b = s5.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x_b, Inches(5.00), Inches(2.93), Inches(1.70))
         style_box(sh_b, bg_color=C_WHITE, border_color=b_col, border_width_pt=1.5)
         tf_b = sh_b.text_frame
         tf_b.vertical_anchor = MSO_ANCHOR.TOP
@@ -743,7 +752,7 @@ def build_winning_deck(output_filename="final.pptx"):
 
         p_h = tf_b.paragraphs[0]
         r_ht = p_h.add_run()
-        set_font(r_ht, b_title, bold=True, size_pt=12.5, color=b_col)
+        set_font(r_ht, b_title, bold=True, size_pt=12.5, color=b_col, font_name=FONT_TITLE)
 
         for b_lbl, b_val in b_bullets:
             p_b = tf_b.add_paragraph()
@@ -755,7 +764,7 @@ def build_winning_deck(output_filename="final.pptx"):
             set_font(r_bv, b_val, bold=False, size_pt=12.0, color=C_SLATE_700)
 
     # ==========================================================================
-    # SLIDE 6: Research and References
+    # SLIDE 6: RESEARCH AND REFERENCES (Exact Template Pointers & Style, Zero Overflow)
     # ==========================================================================
     s6 = prs.slides[5]
     fix_team_oval(s6)
@@ -764,46 +773,47 @@ def build_winning_deck(output_filename="final.pptx"):
     for sh in s6.shapes:
         if sh.name == "Title 1":
             p = sh.text_frame.paragraphs[0]
+            p.alignment = PP_ALIGN.CENTER
             p.text = ""
             r = p.add_run()
-            set_font(r, "RESEARCH AND REFERENCES", bold=True, size_pt=28.0, color=C_SLATE_900)
+            set_font(r, "RESEARCH  AND REFERENCES", bold=True, size_pt=34.0, color=C_BLACK, font_name=FONT_TITLE)
 
-    # Subtitle
-    sub6 = s6.shapes.add_textbox(Inches(0.60), Inches(1.08), Inches(12.13), Inches(0.30))
+    # Subtitle: Pointer: Details / Links of the reference and research work
+    sub6 = s6.shapes.add_textbox(Inches(0.60), Inches(1.06), Inches(12.13), Inches(0.28))
     tf_sub6 = sub6.text_frame
     tf_sub6.word_wrap = True
     tf_sub6.margin_left = 0
     tf_sub6.margin_top = 0
     p_s6 = tf_sub6.paragraphs[0]
     r_s6_1 = p_s6.add_run()
-    set_font(r_s6_1, "Evidence-Based Architecture: ", bold=True, size_pt=13.0, color=C_SLATE_900)
+    set_font(r_s6_1, "DETAILS / LINKS OF THE REFERENCE AND RESEARCH WORK: ", bold=True, size_pt=13.0, color=C_BLACK, font_name=FONT_TITLE)
     r_s6_2 = p_s6.add_run()
-    set_font(r_s6_2, "Statutory Regulatory Mandates, Peer-Reviewed AI Research & Empirical Field Studies", bold=False, size_pt=12.0, color=C_DARK_GREEN)
+    set_font(r_s6_2, "Statutory Regulatory Mandates, Peer-Reviewed AI Research & Empirical Field Studies", bold=False, size_pt=12.5, color=C_DARK_GREEN)
 
     # 3 Large Pillars (w=3.95, h=3.75)
     pillars = [
         ("1. POLICY & REGULATORY MANDATES", "National Standards & Statutory Rules", C_BLUE_DARK,
-         [("SIH Problem 26229 (MoM / JNARDDC): ", "Establishes core mandate for formalizing informal waste-pickers and setting verified price benchmarks."),
-          ("CPCB E-Waste Rules 2022: ", "Enforces digital EPR credit trading, formal recycler licensing, and automated Form-6 filing audit trails."),
+         [("SIH Problem 26229 (MoM / JNARDDC): ", "Mandate for formalizing informal waste-pickers and establishing verified price benchmarks."),
+          ("CPCB E-Waste Rules 2022: ", "Enforces digital EPR credit trading, formal recycler licensing, and automated Form-6 audit trails."),
           ("NITI Aayog Circular Economy: ", "Prioritizes decentralized aggregation hubs, fair floor pricing, and domestic critical mineral recovery."),
           ("Toxics Link Field Studies: ", "Documents 25–40% value skimming by middlemen and severe heavy metal contamination from crude burning.")]),
 
         ("2. TECHNOLOGY & AI RESEARCH", "Peer-Reviewed Models & Open Standards", C_DARK_GREEN,
-         [("IEEE Access (2021) E-Waste AI: ", "Proves transfer-learning CNNs achieve 94%+ classification accuracy for electronic scrap on edge hardware."),
-          ("MobileNetV3 (Google Research): ", "Hardware-aware quantized INT8 neural model (<5MB) running real-time on budget Android smartphones."),
-          ("AI4Bharat Indic Speech (IIT Madras): ", "Vernacular speech-to-text and voice synthesis in 10+ regional Indian languages for low-literacy workers."),
-          ("PostGIS Spatial Clustering: ", "Geospatial indexing (ST_DWithin) and K-Nearest-Neighbor queries for optimal collector-to-hub routing.")]),
+         [("IEEE Access (2021) E-Waste AI: ", "Proves CNN transfer-learning achieves 94%+ scrap classification accuracy on edge hardware."),
+          ("MobileNetV3 (Google Research): ", "Quantized INT8 neural model (<5MB) running real-time inference on budget Android phones."),
+          ("AI4Bharat Indic Speech (IIT Madras): ", "Vernacular speech-to-text models in 10+ regional Indian languages for non-literate workers."),
+          ("PostGIS Spatial Clustering: ", "Geospatial indexing (ST_DWithin) and KNN queries for optimal collector milk-run routing.")]),
 
         ("3. PRIMARY FIELD RESEARCH", "On-Ground Interviews & Validation (Delhi)", C_AMBER_DARK,
-         [("Collector 01 (Waste-Picker): ", "\"Scrap dealers deduct 1–2 kg on mechanical spring scales. If we have true rates and scale photo proof, no one can cut our money.\""),
-          ("Collector 02 (Itinerant Buyer): ", "\"Households bargain hard because they don't trust our rates. Showing live market rates on our phone closes deals fast.\""),
-          ("Aggregator 03 (Scrap Hub Owner): ", "\"Big recyclers pay higher rates but demand bulk lots and manifests. Digital lotting lets us operate as certified formal hubs.\""),
+         [("Collector 01 (Waste-Picker): ", "\"Scrap dealers deduct 1–2 kg on spring scales. Scale photo proof protects our hard-earned money.\""),
+          ("Collector 02 (Itinerant Buyer): ", "\"Households don't trust rates; showing live market prices on our phone closes deals fast.\""),
+          ("Aggregator 03 (Scrap Hub Owner): ", "\"Big recyclers demand bulk lots and manifests. Digital lotting lets us operate as formal hubs.\""),
           ("Core Field Validation: ", "100% of informal actors confirm willingness to use free voice app with instant UPI settlement.")])
     ]
 
     for idx, (p_title, p_sub, p_col, p_bullets) in enumerate(pillars):
         x_p = Inches(0.60) + idx * (Inches(3.95) + Inches(0.14))
-        sh_p = s6.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x_p, Inches(1.42), Inches(3.95), Inches(3.75))
+        sh_p = s6.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x_p, Inches(1.38), Inches(3.95), Inches(3.75))
         style_box(sh_p, bg_color=C_WHITE, border_color=p_col, border_width_pt=1.5)
         tf_p = sh_p.text_frame
         tf_p.vertical_anchor = MSO_ANCHOR.TOP
@@ -815,13 +825,13 @@ def build_winning_deck(output_filename="final.pptx"):
 
         p_h = tf_p.paragraphs[0]
         r_ht = p_h.add_run()
-        set_font(r_ht, p_title, bold=True, size_pt=13.5, color=p_col)
+        set_font(r_ht, p_title, bold=True, size_pt=13.0, color=p_col, font_name=FONT_TITLE)
         r_hsub = p_h.add_run()
         set_font(r_hsub, f"\n{p_sub}", bold=False, size_pt=11.5, color=C_SLATE_500)
 
         for b_lbl, b_val in p_bullets:
             p_b = tf_p.add_paragraph()
-            p_b.space_before = Pt(4.0)
+            p_b.space_before = Pt(3.5)
             p_b.space_after = Pt(0.0)
             r_bl = p_b.add_run()
             set_font(r_bl, f"• {b_lbl}", bold=True, size_pt=12.0, color=p_col)
@@ -830,7 +840,7 @@ def build_winning_deck(output_filename="final.pptx"):
 
     # BOTTOM ROW: 2 Project Links Banners (w=5.99, h=1.50)
     # Banner 1: Live Web App
-    sh_b1 = s6.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.60), Inches(5.30), Inches(5.99), Inches(1.50))
+    sh_b1 = s6.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.60), Inches(5.28), Inches(5.99), Inches(1.50))
     style_box(sh_b1, bg_color=C_BG_GREEN, border_color=C_DARK_GREEN, border_width_pt=1.5)
     tf_b1 = sh_b1.text_frame
     tf_b1.vertical_anchor = MSO_ANCHOR.TOP
@@ -841,7 +851,7 @@ def build_winning_deck(output_filename="final.pptx"):
 
     p_b1_h = tf_b1.paragraphs[0]
     r_b1_lbl = p_b1_h.add_run()
-    set_font(r_b1_lbl, "PROTOTYPE WEB APPLICATION:  ", bold=True, size_pt=12.5, color=C_DARK_GREEN)
+    set_font(r_b1_lbl, "PROTOTYPE WEB APPLICATION:  ", bold=True, size_pt=12.5, color=C_DARK_GREEN, font_name=FONT_TITLE)
     r_b1_lnk = p_b1_h.add_run()
     set_font(r_b1_lnk, "https://recysaathi.vercel.app ↗", bold=True, size_pt=12.5, color=C_BLUE_DARK, underline=True)
     r_b1_lnk.hyperlink.address = "https://recysaathi.vercel.app"
@@ -849,12 +859,12 @@ def build_winning_deck(output_filename="final.pptx"):
     p_b1_d = tf_b1.add_paragraph()
     p_b1_d.space_before = Pt(4.0)
     r_b1_dt = p_b1_d.add_run()
-    set_font(r_b1_dt, "Live Responsive PWA: ", bold=True, size_pt=12.0, color=C_SLATE_900)
+    set_font(r_b1_dt, "Live Responsive PWA: ", bold=True, size_pt=12.0, color=C_BLACK)
     r_b1_dv = p_b1_d.add_run()
     set_font(r_b1_dv, "Mobile web app with visual scrap touch categories, offline IndexedDB transaction storage, and camera scale OCR weight extraction for budget Android phones.", bold=False, size_pt=12.0, color=C_SLATE_700)
 
-    # Banner 2: YouTube Demo
-    sh_b2 = s6.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(6.74), Inches(5.30), Inches(5.99), Inches(1.50))
+    # Banner 2: YouTube Demo (Single line headline: YOUTUBE DEMO: URL)
+    sh_b2 = s6.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(6.74), Inches(5.28), Inches(5.99), Inches(1.50))
     style_box(sh_b2, bg_color=C_BG_BLUE, border_color=C_BLUE_DARK, border_width_pt=1.5)
     tf_b2 = sh_b2.text_frame
     tf_b2.vertical_anchor = MSO_ANCHOR.TOP
@@ -865,15 +875,15 @@ def build_winning_deck(output_filename="final.pptx"):
 
     p_b2_h = tf_b2.paragraphs[0]
     r_b2_lbl = p_b2_h.add_run()
-    set_font(r_b2_lbl, "YOUTUBE VIDEO DEMONSTRATION:  ", bold=True, size_pt=12.0, color=C_BLUE_DARK)
+    set_font(r_b2_lbl, "YOUTUBE DEMO:  ", bold=True, size_pt=12.5, color=C_BLUE_DARK, font_name=FONT_TITLE)
     r_b2_lnk = p_b2_h.add_run()
-    set_font(r_b2_lnk, "https://youtu.be/ewastesetu-demo ↗", bold=True, size_pt=12.0, color=C_BLUE_DARK, underline=True)
+    set_font(r_b2_lnk, "https://youtu.be/ewastesetu-demo ↗", bold=True, size_pt=12.5, color=C_BLUE_DARK, underline=True)
     r_b2_lnk.hyperlink.address = "https://youtu.be/ewastesetu-demo"
 
     p_b2_d = tf_b2.add_paragraph()
     p_b2_d.space_before = Pt(4.0)
     r_b2_dt = p_b2_d.add_run()
-    set_font(r_b2_dt, "Complete System Walkthrough: ", bold=True, size_pt=12.0, color=C_SLATE_900)
+    set_font(r_b2_dt, "Complete System Walkthrough: ", bold=True, size_pt=12.0, color=C_BLACK)
     r_b2_dv = p_b2_d.add_run()
     set_font(r_b2_dv, "End-to-end video demo of voice scrap logging, digital scale OCR weight capture, local hub batch lotting, and dual QR CPCB Form-6 manifest handover.", bold=False, size_pt=12.0, color=C_SLATE_700)
 
@@ -885,7 +895,7 @@ def build_winning_deck(output_filename="final.pptx"):
         print("Deleted Slide 7 successfully!")
 
     prs.save(output_filename)
-    print(f"SUCCESS: Built winning deck '{output_filename}' with MINIMUM FONT SIZE 12pt!")
+    print(f"SUCCESS: Built winning deck '{output_filename}' strictly matching SIH template format with ZERO overflow!")
 
 if __name__ == "__main__":
     build_winning_deck("final.pptx")
